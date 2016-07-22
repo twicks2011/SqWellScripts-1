@@ -14,10 +14,7 @@ HN:=$(hostname)
 ifeq ($(HN),lagavulin)
 	CC=icc
 endif
-ifeq ($(HN),login01)
-	CC=icc
-endif
-ifeq ($(HN),login02)
+ifeq ($(HN),)
 	CC=icc
 endif
 ifeq ($(HN),frontend1)
