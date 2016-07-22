@@ -8,6 +8,13 @@ PRODUCT=$(HOME)/bin/blockVary
 CC=gcc
 CFLAGS=-lm -O2 -I$(NR)/include
 
+
+#use icc on certain servers
+HN:=$(hostname)
+ifeq ($(filter $HN,$(lagavulin) $(login01)),)
+	CC=icc
+endif
+
 all: $(PRODUCT)
 
 $(PRODUCT) : $(SOURCES)
