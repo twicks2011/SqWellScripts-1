@@ -11,7 +11,7 @@ CFLAGS=-lm -O2 -I$(NR)/include
 
 #use icc on certain servers
 HN:=$(hostname)
-ifeq ($(filter $HN,$(lagavulin) $(login01) $(frontend1)),)
+ifeq ($(filter $HN,$(lagavulin) $(login01) $(login02)  $(frontend1)),)
 	CC=icc
 endif
 
