@@ -13,4 +13,4 @@ for f in blockVary clipQuad collateClip dosMapping; do
     echo ""
 done
 
-
+#Minor hpc edit
