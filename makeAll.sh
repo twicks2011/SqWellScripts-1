@@ -5,6 +5,7 @@ cp showAll.sh ~/bin/
 cp sqWellCp.sh ~/bin/
 cp batchOutput/batchOutput.sh ~/bin/
 cp checkOutputFolder.sh ~/bin
+cp quickRestart/quickRestart.sh
 
 
 #Check correct numnber of command line arguments
