@@ -6,6 +6,8 @@
 int main(int argc, char *argv[] )
 {
 
+  char masterWeightFile[400];
+  
   //===Masterfile variables====
   int numTemps;
   char configsInput[400];
@@ -45,6 +47,15 @@ int main(int argc, char *argv[] )
   double END_BRIDGE_MOVES;
     int update;
   double tolerance;
+  int FLAG;
+  int fileNumber;
+
+  
+  char sdir[400];
+  char wdir[400];
+  char ddir[400];
+  char newWeightFile[400];
+  char traceFile[400];
 
   
   //====Original variables
@@ -55,142 +66,189 @@ int main(int argc, char *argv[] )
   int startPoint;
   
 
-  //====Check correct number of args and that input file exisits================
+  //====Check correct at least 4 args and that arg number is even ================
+  FLAG=0;
   if(argc < 5){
+    printf("Not enough arguments\n");
+    FLAG=1;
+  }
+
+
+  if ((argc-1) % 2){
+    printf("Number of arguments, %d, is odd. This should be even.\n", argc-1);
+    FLAG=1;
+  }
+
+  
+  if(FLAG==1){
     printf("Averages over n runs of the sqWell code. All runs must have the same weight file or will be refused.\n");
     printf("Usage: multiAverage [input filename 1][int startPoint 1]...[input filename n][int startPoint n]\n");
     exit(EXIT_FAILURE);
   }
+
+
+  //====Loop over input files==========
+  for(fileNumber=1;   fileNumber<= argc/2 ; fileNumber++){
+    printf("%s %s\n",argv[fileNumber*2-1], argv[fileNumber*2] );
+    
+    
+    if((inputPtr = fopen(argv[fileNumber*2-1],"r")) == NULL){
+      printf("Cannot open file %s\n",argv[fileNumber*2-1]);
+      exit(EXIT_FAILURE);
+    }
+    
  
-  if((inputPtr = fopen(argv[1],"r")) == NULL){
-    printf("Cannot open file %s\n",argv[1]);
-    exit(EXIT_FAILURE);
-  }
-
-
-  //====Read in the input file====================================
-  printf("Reading from the input file: %s\n", argv[1]);
-  fscanf(inputPtr, "%d\n", &N);
-  fgets(buffer, 100, inputPtr);
-  fscanf(inputPtr, "%lf\n", &LAMBDA);
-  fgets(buffer, 100, inputPtr);
-  fscanf(inputPtr, "%d\n", &TEMP_INTEREST);
-  fgets(buffer, 100, inputPtr);
-  fscanf(inputPtr, "%d\n", &numTemps);
-  fgets(buffer, 100, inputPtr);
-  //fscanf(inputPtr, "%lf\n", &RAT);
-  fscanf(inputPtr, "%s\n", tempsFile);
-  fgets(buffer, 100, inputPtr);
-  fscanf(inputPtr, "%d\n", &fileInput);
-  fgets(buffer, 100, inputPtr);
-  fscanf(inputPtr, "%s\n", configsInput);
-  fgets(buffer, 100, inputPtr);
-  fscanf(inputPtr, "%s\n",moveSizesDir);
-  fgets(buffer, 100, inputPtr);
-  fscanf(inputPtr, "%lf\n", &PHI_MAX);
-  fgets(buffer, 100, inputPtr);
-  fscanf(inputPtr, "%lf\n", &ALPHA);
-  fgets(buffer, 100, inputPtr);
-  fscanf(inputPtr, "%lf\n", &BETA);
-  fgets(buffer, 100, inputPtr);
-  fscanf(inputPtr, "%lf\n", &GAMMA);
-  fgets(buffer, 100, inputPtr);
-  fscanf(inputPtr, "%lf\n", &sigma);
-  fgets(buffer, 100, inputPtr);
-  fscanf(inputPtr, "%d\n", &stretchStart);
-  fgets(buffer, 100, inputPtr);
-  fscanf(inputPtr, "%d\n", &stretchFinish);
-  fgets(buffer, 100, inputPtr);
-  fscanf(inputPtr, "%d\n", &Nmin);
-  fgets(buffer, 100, inputPtr);
-  fscanf(inputPtr, "%d\n", &Nmax);
-  fgets(buffer, 100, inputPtr);
-  fscanf(inputPtr, "%lf\n", &kappa);
-  fgets(buffer, 100, inputPtr);
-  fscanf(inputPtr, "%lf\n", &kappaRHS);
-  fgets(buffer, 100, inputPtr);
-  //fscanf(inputPtr, "%s\n", updateInfoDir);
-  //fgets(buffer, 100, inputPtr);
-  fscanf(inputPtr, "%d\n", &update);
-  fgets(buffer, 100, inputPtr);
-  fscanf(inputPtr, "%lf\n", &tolerance);
-  fgets(buffer, 100, inputPtr);
-  fscanf(inputPtr, "%le\n", &PRINT_INTERVAL);
-  fgets(buffer, 100, inputPtr);
-  fscanf(inputPtr, "%le\n", &PHI_UPDATE_INTERVAL);
-  fgets(buffer, 100, inputPtr);
-  fscanf(inputPtr, "%le\n", &UPDATE_INTERVAL);
-  fgets(buffer, 100, inputPtr);
-  fscanf(inputPtr, "%le\n", &SWAP_INTERVAL);
-  fgets(buffer, 100, inputPtr);
-  fscanf(inputPtr, "%d\n", &NUM_SWAPS);
-  fgets(buffer, 100, inputPtr);
-  fscanf(inputPtr, "%le\n", &NUM_SWAP_INTERVALS);
-  fgets(buffer, 100, inputPtr);
-  fscanf(inputPtr, "%le\n", &RESET_INTERVAL);
-  fgets(buffer, 100, inputPtr);
-  fscanf(inputPtr, "%lf\n", &SMALL_ANGLE_MOVES);
-  fgets(buffer, 100, inputPtr);
-  fscanf(inputPtr, "%lf\n", &REPTATION_MOVES);
-  fgets(buffer, 100, inputPtr);
-  fscanf(inputPtr, "%lf\n", &CRANK_MOVES);
-  fgets(buffer, 100, inputPtr);
-  fscanf(inputPtr, "%lf\n", &END_ROT_MOVES);
-  fgets(buffer, 100, inputPtr);
-  fscanf(inputPtr, "%lf\n", &END_BRIDGE_MOVES);
-  fgets(buffer, 100, inputPtr);
-  fscanf(inputPtr, "%s\n",outputDir);
-  fgets(buffer, 100, inputPtr);
-  fscanf(inputPtr, "%s\n",weightFile);
-  fgets(buffer, 100, inputPtr);
-  fscanf(inputPtr, "%s\n",VMDdir);
-  fgets(buffer, 100, inputPtr);
-  fscanf(inputPtr, "%s\n",initCoords);
-  fgets(buffer, 100, inputPtr);
-  fclose(inputPtr);
-  
-  num_blocks= atoi( argv[2]);
-  startPoint= atoi( argv[3]);
-  
-  
-  //printf("Enter the source directory: ");
-  sprintf(sdirTEMP,"%s" ,outputDir);
-
-  N=500;
-
-
-
-
-  //====================Trim down the new weight file folder path====================
-  //printf("Enter name for new weight file: weightFiles/");
-  //scanf("%s",&newWeightFileTEMP);
-  sprintf(newWeightFileTEMP,"%s",argv[1]);
-  for(i = 1  ;   i <= 11   ;   i++)
-    memmove(newWeightFileTEMP, newWeightFileTEMP+1, strlen(newWeightFileTEMP));
-  //sprintf(newWeightFileTEMP,"outputFiles/weightFiles/%s",argv[1]);
 
   
+
+    //====Read in the input file====================================
+    printf("Reading from the input file: %s\n", argv[fileNumber*2-1]);
+    fscanf(inputPtr, "%d\n", &N);
+    fgets(buffer, 100, inputPtr);
+    fscanf(inputPtr, "%lf\n", &LAMBDA);
+    fgets(buffer, 100, inputPtr);
+    fscanf(inputPtr, "%d\n", &TEMP_INTEREST);
+    fgets(buffer, 100, inputPtr);
+    fscanf(inputPtr, "%d\n", &numTemps);
+    fgets(buffer, 100, inputPtr);
+    //fscanf(inputPtr, "%lf\n", &RAT);
+    fscanf(inputPtr, "%s\n", tempsFile);
+    fgets(buffer, 100, inputPtr);
+    fscanf(inputPtr, "%d\n", &fileInput);
+    fgets(buffer, 100, inputPtr);
+    fscanf(inputPtr, "%s\n", configsInput);
+    fgets(buffer, 100, inputPtr);
+    fscanf(inputPtr, "%s\n",moveSizesDir);
+    fgets(buffer, 100, inputPtr);
+    fscanf(inputPtr, "%lf\n", &PHI_MAX);
+    fgets(buffer, 100, inputPtr);
+    fscanf(inputPtr, "%lf\n", &ALPHA);
+    fgets(buffer, 100, inputPtr);
+    fscanf(inputPtr, "%lf\n", &BETA);
+    fgets(buffer, 100, inputPtr);
+    fscanf(inputPtr, "%lf\n", &GAMMA);
+    fgets(buffer, 100, inputPtr);
+    fscanf(inputPtr, "%lf\n", &sigma);
+    fgets(buffer, 100, inputPtr);
+    fscanf(inputPtr, "%d\n", &stretchStart);
+    fgets(buffer, 100, inputPtr);
+    fscanf(inputPtr, "%d\n", &stretchFinish);
+    fgets(buffer, 100, inputPtr);
+    fscanf(inputPtr, "%d\n", &Nmin);
+    fgets(buffer, 100, inputPtr);
+    fscanf(inputPtr, "%d\n", &Nmax);
+    fgets(buffer, 100, inputPtr);
+    fscanf(inputPtr, "%lf\n", &kappa);
+    fgets(buffer, 100, inputPtr);
+    fscanf(inputPtr, "%lf\n", &kappaRHS);
+    fgets(buffer, 100, inputPtr);
+    //fscanf(inputPtr, "%s\n", updateInfoDir);
+    //fgets(buffer, 100, inputPtr);
+    fscanf(inputPtr, "%d\n", &update);
+    fgets(buffer, 100, inputPtr);
+    fscanf(inputPtr, "%lf\n", &tolerance);
+    fgets(buffer, 100, inputPtr);
+    fscanf(inputPtr, "%le\n", &PRINT_INTERVAL);
+    fgets(buffer, 100, inputPtr);
+    fscanf(inputPtr, "%le\n", &PHI_UPDATE_INTERVAL);
+    fgets(buffer, 100, inputPtr);
+    fscanf(inputPtr, "%le\n", &UPDATE_INTERVAL);
+    fgets(buffer, 100, inputPtr);
+    fscanf(inputPtr, "%le\n", &SWAP_INTERVAL);
+    fgets(buffer, 100, inputPtr);
+    fscanf(inputPtr, "%d\n", &NUM_SWAPS);
+    fgets(buffer, 100, inputPtr);
+    fscanf(inputPtr, "%le\n", &NUM_SWAP_INTERVALS);
+    fgets(buffer, 100, inputPtr);
+    fscanf(inputPtr, "%le\n", &RESET_INTERVAL);
+    fgets(buffer, 100, inputPtr);
+    fscanf(inputPtr, "%lf\n", &SMALL_ANGLE_MOVES);
+    fgets(buffer, 100, inputPtr);
+    fscanf(inputPtr, "%lf\n", &REPTATION_MOVES);
+    fgets(buffer, 100, inputPtr);
+    fscanf(inputPtr, "%lf\n", &CRANK_MOVES);
+    fgets(buffer, 100, inputPtr);
+    fscanf(inputPtr, "%lf\n", &END_ROT_MOVES);
+    fgets(buffer, 100, inputPtr);
+    fscanf(inputPtr, "%lf\n", &END_BRIDGE_MOVES);
+    fgets(buffer, 100, inputPtr);
+    fscanf(inputPtr, "%s\n",outputDir);
+    fgets(buffer, 100, inputPtr);
+    fscanf(inputPtr, "%s\n",weightFile);
+    fgets(buffer, 100, inputPtr);
+    fscanf(inputPtr, "%s\n",VMDdir);
+    fgets(buffer, 100, inputPtr);
+    fscanf(inputPtr, "%s\n",initCoords);
+    fgets(buffer, 100, inputPtr);
+    fclose(inputPtr);
+
+    
+    //check that the weightFiles are all the same
+    if(fileNumber == 1){
+      strcpy(masterWeightFile, weightFile);
+    }else{
+      //      printf("Comparing %s and %s\n",weightFile, masterWeightFile);
+      if( strcmp(masterWeightFile,weightFile) != 0 ){
+	printf("Weight files don't agree for file %d!!!!!!!!!!!!!\n%s \n%s \n",
+	       fileNumber*2-1,masterWeightFile, weightFile);
+	exit( EXIT_FAILURE);
+      }
+    }
+
+    
+    
+    printf("%d %s %s\n", fileNumber*2-1, masterWeightFile, weightFile);
+
+
+
+    //convert command line arguments to integers
+    num_blocks= 1000000000;
+    startPoint= atoi( argv[fileNumber*2]);
+
+    //printf("Start point=%d\n",startPoint);
+    
+   
+    sprintf(sdirTEMP,"%s" ,outputDir);
+    
+    //Hard code in the maximum number of states
+    N=500;
+    
   
-  char sdir[400];
-  char wdir[400];
-  char ddir[400];
-  char newWeightFile[400];
-  char traceFile[400];
-  sprintf(sdir,"%s/",sdirTEMP);
-  sprintf(wdir,"%s/",sdirTEMP);
-  // sprintf(ddir,"%s/",ddirTEMP);
-  sprintf(ddir,"%s/collated/",sdirTEMP);
-  sprintf(weightFile,"%s",weightFileTEMP);
-  sprintf(newWeightFile,"outputFiles/weightFiles/%s",newWeightFileTEMP);
 
-  printf("Source directory: %s\n", sdir);
-  printf("Working directory: %s\n", wdir);
-  printf("Number of blocks: %d\n", num_blocks);
-  printf("Max no. of states: %d\n",N);
-  printf("Weight File for correction: %s\n",weightFile);
-  printf("New weight file: %s\n",newWeightFile);
-  printf("Number of Temps = %d\n",numTemps);
 
+
+    //====================Trim down the new weight file folder path====================
+
+    sprintf(newWeightFileTEMP,"%s",argv[fileNumber*2 - 1]);
+    for(i = 1  ;   i <= 11   ;   i++)
+      memmove(newWeightFileTEMP, newWeightFileTEMP+1, strlen(newWeightFileTEMP));
+    //sprintf(newWeightFileTEMP,"outputFiles/weightFiles/%s",argv[1]);
+    printf("Created new weight file string as: %s\n",newWeightFileTEMP);
+    printf("%d %s %s\n", fileNumber*2-1, masterWeightFile, weightFile);
+
+    printf("%d %s %s\n", fileNumber*2-1, masterWeightFile, weightFile);
+  
+
+    //Summarise the input file to the screen
+    sprintf(sdir,"%s/",sdirTEMP);
+    sprintf(wdir,"%s/",sdirTEMP);
+    // sprintf(ddir,"%s/",ddirTEMP);
+    sprintf(ddir,"%s/collated/",sdirTEMP);
+    sprintf(weightFile,"%s",weightFileTEMP);
+    sprintf(newWeightFile,"outputFiles/weightFiles/%s",newWeightFileTEMP);
+    
+    printf("Source directory: %s\n", sdir);
+    printf("Working directory: %s\n", wdir);
+    printf("Number of blocks: %d\n", num_blocks);
+    printf("Max no. of states: %d\n",N);
+    printf("Weight File for correction: %s\n",weightFile);
+    printf("New weight file: %s\n",newWeightFile);
+    printf("Number of Temps = %d\n",numTemps);
+
+    printf("\n\n");
+  }//loop over input files
+  exit(EXIT_FAILURE);
+ 
   //return 0;
 
   long unsigned int occupanciesTEMP[18][1000]={0};
@@ -259,7 +317,7 @@ int main(int argc, char *argv[] )
     }
 
     for(j=0; j< numTemps ; j++){
-      fprintf(rangePtr[j],"%d %f %d %d\n",n, runningMean[j]/(1.0*totalOcc[j]) ,  minEl[j] ,maxEl[j]);
+      fprintf(rangePtr[j],"%d %f %ld %ld\n",n, runningMean[j]/(1.0*totalOcc[j]) ,  minEl[j] ,maxEl[j]);
       //printf("%d %d %d\n",n, minEl[j], maxEl[j]);
     }
     
