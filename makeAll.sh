@@ -30,7 +30,7 @@ fi
 
 
 echo ""
-for f in blockVary clipQuad collateClip dosMapping; do
+for f in blockVary clipQuad collateClip dosMapping multiAverage; do
     echo $f
     cd $f
     make CC=$compiler
