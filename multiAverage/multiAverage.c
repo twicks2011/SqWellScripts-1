@@ -76,14 +76,14 @@ int main(int argc, char *argv[] )
 
   //====Check correct at least 4 args and that arg number is even ================
   FLAG=0;
-  if(argc < 5){
+  if(argc < 6){
     printf("Not enough arguments\n");
     FLAG=1;
   }
 
 
-  if ((argc-1) % 2){
-    printf("Number of arguments, %d, is odd. This should be even.\n", argc-1);
+  if ((argc) % 2){
+    printf("Number of arguments, %d, is even. This should be odd.\n", argc-1);
     FLAG=1;
   }
 
@@ -103,7 +103,7 @@ int main(int argc, char *argv[] )
   
 
   //====Loop over input files==========
-  for(fileNumber=2;   fileNumber<= argc/2 ; fileNumber++){
+  for(fileNumber=2;   fileNumber<= (argc-1)/2 ; fileNumber++){
     printf("%s %s\n",argv[fileNumber*2-1], argv[fileNumber*2] );
     
     
@@ -377,7 +377,7 @@ int main(int argc, char *argv[] )
     */
 
     if( j== TEMP_INTEREST){
-      biasOutputPtr = fopen(newWeightFile,"w");
+      biasOutputPtr = fopen(argv[argc-1],"w");
       for(i=0;i<N;i++)
 	fprintf(biasOutputPtr,"%d %f\n",i, FE[j][i]);
       fclose(biasOutputPtr);
