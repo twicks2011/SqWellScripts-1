@@ -223,7 +223,8 @@ int main(int argc, char *argv[] )
       break;
     }
     else
-      printf("Reading from file: %s\n", blockFile);
+      if (!(n % 100))
+	printf("Reading from file: %s\n", blockFile);
     i=0;
     for(i=0;i<N;i++){
       for(j=0;j<numTemps;j++)
@@ -312,13 +313,13 @@ int main(int argc, char *argv[] )
     if( j== TEMP_INTEREST){
       biasOutputPtr = fopen(newWeightFile,"w");
       for(i=0;i<N;i++)
-	fprintf(biasOutputPtr,"%ld %f\n",i, FE[j][i]);
+	fprintf(biasOutputPtr,"%d %f\n",i, FE[j][i]);
       fclose(biasOutputPtr);
     }
 
     for(i=0;i<N;i++){
-      fprintf(occOutputPtr,"%ld %f\n", i, relOccupancies[j][i]);
-      fprintf(FEoutputPtr,"%ld %f\n", i, FE[j][i]);
+      fprintf(occOutputPtr,"%d %f\n", i, relOccupancies[j][i]);
+      fprintf(FEoutputPtr,"%d %f\n", i, FE[j][i]);
     }
     fclose(occOutputPtr);
     fclose(FEoutputPtr);

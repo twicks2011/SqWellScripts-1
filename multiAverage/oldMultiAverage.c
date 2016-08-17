@@ -49,7 +49,6 @@ int main(int argc, char *argv[] )
   double tolerance;
   int FLAG;
   int fileNumber;
-  int NBeads;
 
   
   char sdir[400];
@@ -62,17 +61,10 @@ int main(int argc, char *argv[] )
   //====Original variables
   char sdirTEMP[400], ddirTEMP[400], weightFileTEMP[400], weightFile[400], newWeightFileTEMP[400];
   int num_blocks;
-  int N, matchPoint;
+  int N;
   int i, j, n;
   int startPoint;
-
-  long unsigned int occupanciesTEMP[18][1000]={0};
-    long unsigned int occupancies[18][1000]={0};
-
-    FILE  *weightPtr;
-    char blockFile[400];
-    double bias[1000];
-
+  
 
   //====Check correct at least 4 args and that arg number is even ================
   FLAG=0;
@@ -90,20 +82,13 @@ int main(int argc, char *argv[] )
   
   if(FLAG==1){
     printf("Averages over n runs of the sqWell code. All runs must have the same weight file or will be refused.\n");
-    printf("Usage: multiAverage  [int matchPoint][int NMax][input filename 1][int startPoint 1]...[input filename n][int startPoint n]\n");
+    printf("Usage: multiAverage [input filename 1][int startPoint 1]...[input filename n][int startPoint n]\n");
     exit(EXIT_FAILURE);
   }
 
-  matchPoint = atoi( argv[1]);
-  N= atoi( argv[2]);
-
-  printf("matchpoint=%d, Nmax=%d\n",matchPoint, N);
-  //return 0;
-
-  
 
   //====Loop over input files==========
-  for(fileNumber=2;   fileNumber<= argc/2 ; fileNumber++){
+  for(fileNumber=1;   fileNumber<= argc/2 ; fileNumber++){
     printf("%s %s\n",argv[fileNumber*2-1], argv[fileNumber*2] );
     
     
@@ -114,11 +99,11 @@ int main(int argc, char *argv[] )
     
  
 
+  
 
-    
     //====Read in the input file====================================
     printf("Reading from the input file: %s\n", argv[fileNumber*2-1]);
-    fscanf(inputPtr, "%d\n", &NBeads);
+    fscanf(inputPtr, "%d\n", &N);
     fgets(buffer, 100, inputPtr);
     fscanf(inputPtr, "%lf\n", &LAMBDA);
     fgets(buffer, 100, inputPtr);
@@ -196,10 +181,10 @@ int main(int argc, char *argv[] )
     fscanf(inputPtr, "%s\n",initCoords);
     fgets(buffer, 100, inputPtr);
     fclose(inputPtr);
-    
 
+    
     //check that the weightFiles are all the same
-    if(fileNumber == 2){
+    if(fileNumber == 1){
       strcpy(masterWeightFile, weightFile);
     }else{
       //      printf("Comparing %s and %s\n",weightFile, masterWeightFile);
@@ -210,23 +195,25 @@ int main(int argc, char *argv[] )
       }
     }
 
-
-
+    
+    
     printf("%d %s %s\n", fileNumber*2-1, masterWeightFile, weightFile);
 
-  
+
 
     //convert command line arguments to integers
     num_blocks= 1000000000;
     startPoint= atoi( argv[fileNumber*2]);
+
+    //printf("Start point=%d\n",startPoint);
     
-    printf("Start point=%d\n",startPoint);
-    
-    
+   
     sprintf(sdirTEMP,"%s" ,outputDir);
     
+    //Hard code in the maximum number of states
+    N=500;
     
-
+  
 
 
 
@@ -239,16 +226,17 @@ int main(int argc, char *argv[] )
     printf("Created new weight file string as: %s\n",newWeightFileTEMP);
     printf("%d %s %s\n", fileNumber*2-1, masterWeightFile, weightFile);
 
+    printf("%d %s %s\n", fileNumber*2-1, masterWeightFile, weightFile);
   
+
     //Summarise the input file to the screen
     sprintf(sdir,"%s/",sdirTEMP);
     sprintf(wdir,"%s/",sdirTEMP);
     // sprintf(ddir,"%s/",ddirTEMP);
     sprintf(ddir,"%s/collated/",sdirTEMP);
-    //sprintf(newWeightFile,"outputFiles/weightFiles/%s",newWeightFileTEMP);
-    sprintf(newWeightFile,"dummy.dat");
+    sprintf(weightFile,"%s",weightFileTEMP);
+    sprintf(newWeightFile,"outputFiles/weightFiles/%s",newWeightFileTEMP);
     
-
     printf("Source directory: %s\n", sdir);
     printf("Working directory: %s\n", wdir);
     printf("Number of blocks: %d\n", num_blocks);
@@ -257,89 +245,108 @@ int main(int argc, char *argv[] )
     printf("New weight file: %s\n",newWeightFile);
     printf("Number of Temps = %d\n",numTemps);
 
+    printf("\n\n");
+  }//loop over input files
+  exit(EXIT_FAILURE);
+ 
+  //return 0;
+
+  long unsigned int occupanciesTEMP[18][1000]={0};
+  long unsigned int occupancies[18][1000]={0};
+  long unsigned int maxVal[18]={0};
+  long unsigned int mode[18]={0};
+  long  int minEl[18]={0};
+  long  int maxEl[18]={0};
+  long  int totalOcc[18]={0};
+  long  int runningMean[18]={0};
+
+  char occOutputFile[400];
+  
+  FILE  *weightPtr;
+  FILE  *rangePtr[18];
+  char blockFile[400];
+  double bias[1000];
+
+
+  //printf("Nmax=%d\n",N);
+
+  //Need to open output files!!!
+
+  for(j=0; j<numTemps ; j++){
+    sprintf(occOutputFile,"%sRange%d.dat",sdir,j);
+    printf("%s\n", occOutputFile);
+    rangePtr[j] = fopen(occOutputFile,"w");
+  }
+  
+  //====================Main loop========================
+  for(n=startPoint;n<num_blocks;n++){
+    sprintf(blockFile,"%soccupancies/block_%d.dat",sdir,n+1);
+    if((inputPtr=fopen(blockFile,"r"))==NULL){
+      printf("Cannot open file: %s\n", blockFile);
+      printf("No more blocks to read from!\n");
+      //exit(EXIT_FAILURE);
+      break;
+    }
+    else{
+      printf("Reading from file: %s\n", blockFile);
 
     
+    for(i = 0  ;   i <  18  ;   i++){
+      //maxVal[i]=0;
+      //mode[i]=0;
+      minEl[i]=300000;
+      maxEl[i]=0;
+      totalOcc[i]=0;
+      runningMean[i]=0;
+    }
+    
 
-
-    //printf("Nmax=%d\n",N);
-
-    //====Read in blocks from startPoint===========
-    for(n=startPoint;n<num_blocks;n++){
-      sprintf(blockFile,"%soccupancies/block_%d.dat",sdir,n+1);
-      if((inputPtr=fopen(blockFile,"r"))==NULL){
-	printf("Cannot open file: %s\n", blockFile);
-	printf("No more blocks to read from!\n");
-	//exit(EXIT_FAILURE);
-	break;
+    
+    i=0;
+    for(i=0;i<N;i++){
+      for(j=0;j<numTemps;j++){
+	fscanf(inputPtr,"%ld",&occupanciesTEMP[j][i]);
+	
+	totalOcc[j] += occupanciesTEMP[j][i];
+	runningMean[j] += i* occupanciesTEMP[j][i];
+	
+	//printf("%d %d %ld\n",j,i, occupanciesTEMP[j][i]);
+	if(   occupanciesTEMP[j][i]>10 &&  i > maxEl[j] ) maxEl[j]=i;
+	if(  occupanciesTEMP[j][i]>10 &&   i < minEl[j] ) minEl[j]=i;
       }
-      else
-	if (!(n % 100)) 
-	  printf("Reading from file: %s\n", blockFile);
-      i=0;
-      for(i=0;i<N;i++){
-	for(j=0;j<numTemps;j++)
-	  fscanf(inputPtr,"%ld",&occupanciesTEMP[j][i]);      
-      }
-      fclose(inputPtr);
-      //printf("Read in: %ld\n",occupanciesTEMP[3][200]);
-         
-  
-      
-      //==Compute the total occupancy (unnormalised average)===
-      for(i=0;i<N;i++){
-	for(j=0;j<numTemps;j++)
-	  occupancies[j][i]+=occupanciesTEMP[j][i];
-      }
-      //printf("Current running total: %ld\n",occupancies[3][200]);
-      
-    }//loop over block files
+    }
 
+    for(j=0; j< numTemps ; j++){
+      fprintf(rangePtr[j],"%d %f %ld %ld\n",n, runningMean[j]/(1.0*totalOcc[j]) ,  minEl[j] ,maxEl[j]);
+      //printf("%d %d %d\n",n, minEl[j], maxEl[j]);
+    }
+    
+    fclose(inputPtr);
 
-    printf("*****************************************************************************\n\n");
-  }//loop over input files
-  
-
+    }
+  }
 
   
+  for(j=1; j<numTemps ; j++){
+    fclose(rangePtr[j]);
+  }
+
+  /*
 
   long unsigned int totalSteps=0;
   double relOccupancies[18][1000];
   double FE[18][1000];
-  double basePoint;
 
   for(i=0;i<N;i++)
     totalSteps += occupancies[0][i];
 
-  printf("total steps=%ld; weightfile=%s\n",totalSteps, weightFile);
-
-
-  
   int  dummyInt;
 
   //printf("Nmax=%d\n",N);
 
-
-  //=====Read in weight file===============
-  if((weightPtr=fopen(weightFile,"r"))==NULL)
-    printf("Cannot open weight file: %s\n", weightFile);
-  else{
-    //printf("Nmax=%d\n",N);
-    for(i=0;i<N;i++){
-      //printf("Nmax=%d\n",N);
-      fscanf(weightPtr,"%d %lf",&dummyInt, &bias[i]);
-      //printf("%d %d %f %d\n",i, dummyInt, bias[i],N);
-      }
-  }
-  fclose(weightPtr);
-  printf("Weight file read\n");
-  //printf("Nmax=%d\n",N);
-
-
-
-
-  //===Compute the unshifted free energy========
+  
+ 
   for(i=0;i<N;i++){
-    //printf("Loop in!\n");
     for(j=0;  j<numTemps ;   j++){
       relOccupancies[j][i] = 1.0*occupancies[j][i]/(1.0*totalSteps);      
       if(relOccupancies[j][i]>0.0)
@@ -351,15 +358,13 @@ int main(int argc, char *argv[] )
     }
   }
 
-
-  //===Find the FE at the match point and subtract=======
   for(j=0; j<=numTemps; j++){
-    basePoint = FE[j][matchPoint];
-    printf("matchPoint=%d baseFE=%f N=%d\n",matchPoint, basePoint, N );
-    for(i=0;i<N;i++)
-      FE[j][i] -= basePoint;
+    for(i=1;i<N;i++)
+      FE[j][i] -= FE[j][0];
+
+    FE[j][0] = 0.0;
   }
-  
+
 
   //printf("Num %d\n",numTemps);
   //printf("Number of Temps = %d\n",numTemps);
@@ -367,33 +372,32 @@ int main(int argc, char *argv[] )
   FILE *occOutputPtr, *FEoutputPtr, *biasOutputPtr;
   char occOutputFile[400], FEoutputFile[400];
   for(j=0;j<numTemps;j++){
-
-    
-    /*
+    //printf("%d\n",j);
     sprintf(occOutputFile,"%soccW_chain%d.dat",ddir,j);
+    //printf("Occ out %s\n",occOutputFile );
     sprintf(FEoutputFile,"%sFE_chain%d.dat",ddir,j);
+    //printf("FE out %s\n",FEoutputFile );
     occOutputPtr = fopen(occOutputFile,"w");
     FEoutputPtr = fopen(FEoutputFile, "w");
-    */
+
 
     if( j== TEMP_INTEREST){
       biasOutputPtr = fopen(newWeightFile,"w");
       for(i=0;i<N;i++)
-	fprintf(biasOutputPtr,"%d %f\n",i, FE[j][i]);
+	fprintf(biasOutputPtr,"%ld %f\n",i, FE[j][i]);
       fclose(biasOutputPtr);
     }
 
-    /*
     for(i=0;i<N;i++){
-      fprintf(occOutputPtr,"%d %f\n", i, relOccupancies[j][i]);
-      fprintf(FEoutputPtr,"%d %f\n", i, FE[j][i]);
+      fprintf(occOutputPtr,"%ld %f\n", i, relOccupancies[j][i]);
+      fprintf(FEoutputPtr,"%ld %f\n", i, FE[j][i]);
     }
     fclose(occOutputPtr);
     fclose(FEoutputPtr);
-    */
+
   }
 
-  printf("Finished!\n");
-
+  //printf("Finished!\n");
+  */
   return 0;
 }

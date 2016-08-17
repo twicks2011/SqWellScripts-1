@@ -229,6 +229,7 @@ int main(int argc, char *argv[] )
       break;
     }
     else{
+      if (!(n % 100))
       printf("Reading from file: %s\n", blockFile);
 
     
@@ -258,7 +259,7 @@ int main(int argc, char *argv[] )
     }
 
     for(j=0; j< numTemps ; j++){
-      fprintf(rangePtr[j],"%d %f %d %d\n",n, runningMean[j]/(1.0*totalOcc[j]) ,  minEl[j] ,maxEl[j]);
+      fprintf(rangePtr[j],"%d %f %ld %ld\n",n, runningMean[j]/(1.0*totalOcc[j]) ,  minEl[j] ,maxEl[j]);
       //printf("%d %d %d\n",n, minEl[j], maxEl[j]);
     }
     
