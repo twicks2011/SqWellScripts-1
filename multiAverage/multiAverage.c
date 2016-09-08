@@ -58,6 +58,8 @@ int main(int argc, char *argv[] )
   char newWeightFile[400];
   char traceFile[400];
 
+  char inputFileName[400];
+
   
   //====Original variables
   char sdirTEMP[400], ddirTEMP[400], weightFileTEMP[400], weightFile[400], newWeightFileTEMP[400];
@@ -90,7 +92,7 @@ int main(int argc, char *argv[] )
   
   if(FLAG==1){
     printf("Averages over n runs of the sqWell code. All runs must have the same weight file or will be refused.\n");
-    printf("Usage: multiAverage  [int matchPoint][int NMax][input filename 1][int startPoint 1]...[input filename n][int startPoint n]\n");
+    printf("Usage: multiAverage  [int matchPoint][int NMax][input filename 1][int startPoint 1]...[input filename n][int startPoint n][output file name]\n");
     exit(EXIT_FAILURE);
   }
 
@@ -105,9 +107,12 @@ int main(int argc, char *argv[] )
   //====Loop over input files==========
   for(fileNumber=2;   fileNumber<= (argc-1)/2 ; fileNumber++){
     printf("%s %s\n",argv[fileNumber*2-1], argv[fileNumber*2] );
+
+    sprintf( inputFileName,"inputFiles/%s.dat", argv[fileNumber*2-1]);
+
     
     
-    if((inputPtr = fopen(argv[fileNumber*2-1],"r")) == NULL){
+    if((inputPtr = fopen(inputFileName,"r")) == NULL){
       printf("Cannot open file %s\n",argv[fileNumber*2-1]);
       exit(EXIT_FAILURE);
     }
