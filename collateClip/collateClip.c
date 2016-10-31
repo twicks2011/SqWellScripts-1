@@ -55,7 +55,7 @@ int main(int argc, char *argv[] )
   int startPoint;
 
   if(argc != 5){
-    printf("Usage: masterCollate [int matchPoint][int NMax][input filename][int averaging start point]\n");
+    printf("Usage: collateClip [int matchPoint][int NMax][input filename][int averaging start point]\n");
     exit(EXIT_FAILURE);
   }
  
